@@ -1,0 +1,44 @@
+{
+  "title": "The First Amendment: Your Voice Matters",
+  "description": "A 60-second journey through the First Amendment's protection of free speech, from colonial times to social media today.",
+  "sections": [
+    {
+      "start_time": 0.0,
+      "end_time": 15.0,
+      "content": "Hook: Imagine a world where you couldn't share your thoughts online...",
+      "visual_prompt": "Modern teenager looking at phone, then transitioning to colonial era",
+      "audio_prompt": "Background music: Suspenseful, modern beat transitioning to historical theme"
+    },
+    {
+      "start_time": 15.0,
+      "end_time": 30.0,
+      "content": "Context: In 1791, the First Amendment guaranteed our right to speak freely",
+      "visual_prompt": "Dramatic recreation of Constitutional Convention, close-up on First Amendment text",
+      "audio_prompt": "Narration: Authoritative, engaging tone"
+    },
+    {
+      "start_time": 30.0,
+      "end_time": 45.0,
+      "content": "Impact: Today, this right protects everything from social media posts to peaceful protests",
+      "visual_prompt": "Split screen showing historical protests and modern social media feeds",
+      "audio_prompt": "Music shift to empowering, contemporary beat"
+    },
+    {
+      "start_time": 45.0,
+      "end_time": 60.0,
+      "content": "Call to Action: How do you use your voice? Share your story below!",
+      "visual_prompt": "Text overlay with question, modern teens expressing themselves",
+      "audio_prompt": "Final music cue: Upbeat, inspiring"
+    }
+  ],
+  "hashtags": [
+    "#FirstAmendment",
+    "#FreeSpeech",
+    "#AmericanHistory",
+    "#StudentVoice",
+    "#BillOfRights"
+  ],
+  "call_to_action": "How do you use your voice? Share your story below! 👇",
+  "target_audience": "13-18",
+  "duration": 60.0
+} 
