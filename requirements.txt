@@ -1,9 +1,11 @@
 # Core dependencies
 huggingface-hub>=0.19.0
 transformers>=4.36.0
-torch>=2.1.0
+torch>=2.1.2
 numpy>=1.24.0
 pillow>=10.0.0
+diffusers>=0.25.0
+sentencepiece>=0.1.99
 
 # Video processing
 moviepy>=1.0.3
@@ -20,4 +22,13 @@ pytest-cov>=4.1.0
 # Development
 black>=23.7.0
 flake8>=6.1.0
-isort>=5.12.0 
+isort>=5.12.0
+
+# SageMaker and AWS
+sagemaker>=2.198.0
+boto3>=1.28.0
+awscli>=1.32.0
+
+# Model specific
+accelerate>=0.25.0
+safetensors>=0.4.0 

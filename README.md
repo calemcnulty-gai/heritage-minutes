@@ -1,64 +1,92 @@
-# A250: American History Shorts
+# Heritage Minutes: American History Shorts
 
-## Overview
-A250 is a project to create 250 cinematic, 60-second videos that bring American history and the Bill of Rights to life for students on platforms like TikTok. Partnering with Stand Together and the Bill of Rights Institute, we aim to reach 10 million students by July 4, 2027, turning history into must-watch, must-share content.
+This project generates cinematic, swipe-length (60-second) videos that bring American history and the Bill of Rights to life using Hugging Face's text-to-video models.
 
-## Goals
-- Produce engaging, swipe-length stories scripted for social media
-- Include interactive elements like polls to spark debate on issues like free speech
-- Provide free lesson packs for teachers to use in classrooms
-- Achieve viral reach through stitching and dueting on TikTok
+## Prerequisites
 
-## Project Structure
-```
-project_root/
- |-- .cursor/
- |     |-- rules/
- |     |-- project_plan.md
- |     |-- changelog.md
- |
- |-- src/
- |     |-- video_generation/    # Code for generating videos
- |     |-- scripts/            # Video script templates
- |
- |-- videos/                   # Generated video assets
- |
- |-- scripts/                  # Project scripts and utilities
- |
- |-- README.md
+1. Python 3.9 or higher
+2. Hugging Face API token
+
+## Setup
+
+1. Create and activate a virtual environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Unix/macOS
+# or
+.venv\Scripts\activate  # On Windows
 ```
 
-## Setup & Installation
-1. Clone the repository
 2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Set up Hugging Face API access:
-   ```bash
-   export HUGGINGFACE_API_KEY=your_api_key_here
-   ```
+```bash
+pip install -r requirements.txt
+```
+
+3. Set up environment variables:
+Create a `.env` file in the project root with the following variables:
+```bash
+HUGGINGFACE_API_TOKEN=your_token_here
+```
 
 ## Usage
-1. Generate a new video:
-   ```bash
-   python src/video_generation/generate.py --script path/to/script.md
-   ```
-2. Process and optimize for TikTok:
-   ```bash
-   python src/video_generation/optimize.py --input path/to/video.mp4
-   ```
 
-## Testing
-Run the test suite:
+The project provides a command-line interface for generating videos from scripts:
+
 ```bash
-pytest tests/
+python src/video_generation/cli.py generate --script path/to/script.json
 ```
 
+Example script format:
+```json
+{
+    "title": "First Amendment",
+    "description": "A cinematic exploration of freedom of speech",
+    "scenes": [
+        {
+            "description": "A peaceful protest in Washington DC",
+            "duration": 15
+        }
+    ]
+}
+```
+
+## Project Structure
+
+```
+src/
+├── video_generation/
+│   ├── generator.py    # Core video generation logic
+│   └── cli.py         # Command-line interface
+├── scripts/
+│   ├── template.py    # Script structure and validation
+│   └── samples/       # Example scripts
+└── utils/            # Helper functions
+```
+
+## Development
+
+1. Create a new script in `src/scripts/samples/`
+2. Test generation with the CLI
+3. Review output in the `output/` directory
+
+## Troubleshooting
+
+1. If you encounter API errors:
+   - Verify your Hugging Face API token
+   - Check your internet connection
+   - Ensure you have sufficient API credits
+
+2. If video generation fails:
+   - Check the input script format
+   - Verify model availability
+   - Check system resources
+
 ## Contributing
+
 1. Fork the repository
 2. Create a feature branch
 3. Submit a pull request
 
 ## License
+
 MIT License - See LICENSE file for details 

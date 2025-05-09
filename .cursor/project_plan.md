@@ -30,12 +30,12 @@ A250 aims to create 250 cinematic, swipe-length (60-second) videos that bring Am
 
 - **Task 4: Implement Core Video Generation Pipeline**  
   Status: In Progress  
-  Description: Build the core system for generating videos from scripts.
+  Description: Build the core system for generating videos from scripts using Hugging Face models.
   Subtasks:
   - [x] Create basic project structure
   - [x] Implement VideoGenerator class
   - [x] Create CLI interface
-  - [ ] Implement frame generation
+  - [ ] Implement frame generation with Hugging Face models
   - [ ] Implement video post-processing
   - [ ] Add text overlay system
   - [ ] Implement audio generation and mixing
@@ -83,4 +83,11 @@ A250 aims to create 250 cinematic, swipe-length (60-second) videos that bring Am
   - [ ] Create content calendar
   - [ ] Develop batch processing system
   - [ ] Implement quality control checks
-  - [ ] Set up content review process 
+  - [ ] Set up content review process
+
+## Current Status
+- Project initialization: In progress
+- Hugging Face integration: In progress
+- Video generation pipeline: In progress
+- Testing & Evaluation: Not started
+- Documentation: In progress 

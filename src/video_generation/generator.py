@@ -4,113 +4,167 @@ Handles the generation of 60-second history videos using Hugging Face models.
 """
 
 import os
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional, Dict, Union
+import requests
+import json
+import logging
+import cv2
+import numpy as np
+from dotenv import load_dotenv
 
-import torch
-from huggingface_hub import HfApi
-from transformers import AutoModelForTextToVideo, AutoTokenizer
-from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip
-from PIL import Image
+load_dotenv()
 
-@dataclass
-class VideoConfig:
-    """Configuration for video generation."""
-    width: int = 1080
-    height: int = 1920  # TikTok vertical format
-    fps: int = 30
-    duration: int = 60  # 60 seconds
-    model_name: str = "damo-vilab/text-to-video-ms-1.7b"  # Example model, to be updated based on research
-    output_format: str = "mp4"
-    temp_dir: str = "temp"
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class VideoGenerator:
     """Main class for generating history videos."""
     
-    def __init__(self, config: Optional[VideoConfig] = None):
-        """Initialize the video generator with configuration."""
-        self.config = config or VideoConfig()
-        self._setup_directories()
-        self._load_models()
-        
-    def _setup_directories(self):
-        """Create necessary directories for video generation."""
-        os.makedirs(self.config.temp_dir, exist_ok=True)
-        
-    def _load_models(self):
-        """Load required Hugging Face models."""
-        self.tokenizer = AutoTokenizer.from_pretrained(self.config.model_name)
-        self.model = AutoModelForTextToVideo.from_pretrained(self.config.model_name)
-        if torch.cuda.is_available():
-            self.model = self.model.to("cuda")
-            
-    def generate_from_script(self, script: str, output_path: str) -> str:
+    def __init__(self, model_name: str = "Lightricks/LTX-Video"):
         """
-        Generate a video from a script.
+        Initialize the video generator with a specific model.
         
         Args:
-            script: The script text to generate video from
-            output_path: Where to save the generated video
+            model_name: Name of the Hugging Face model to use
+        """
+        self.model_name = model_name
+        self.api_token = os.getenv("HUGGINGFACE_API_TOKEN")
+        if not self.api_token:
+            raise ValueError("HUGGINGFACE_API_TOKEN not found in environment variables")
+        
+        self.api_url = f"https://api-inference.huggingface.co/models/{model_name}"
+        self.headers = {"Authorization": f"Bearer {self.api_token}"}
+        
+    def _save_video_with_cv2(self, frames, output_path: str, fps: int = 24):
+        """Save video frames using OpenCV with high quality settings."""
+        if not frames:
+            raise ValueError("No frames to save")
+            
+        # Convert frames to numpy arrays if they aren't already
+        frames = [np.array(frame) for frame in frames]
+        
+        # Get video dimensions from first frame
+        height, width = frames[0].shape[:2]
+        
+        # Create video writer with high quality settings
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(
+            output_path,
+            fourcc,
+            fps,
+            (width, height),
+            True
+        )
+        
+        # Write frames
+        for frame in frames:
+            out.write(frame)
+            
+        out.release()
+        logger.info(f"Video saved with OpenCV at: {output_path}")
+
+    def generate_video(
+        self,
+        prompt: str,
+        output_path: Union[str, Path],
+        negative_prompt: Optional[str] = None,
+        num_frames: int = 32,
+        num_inference_steps: int = 50,
+        width: int = 1024,
+        height: int = 576,
+        fps: int = 24,
+        seed: Optional[int] = None
+    ) -> str:
+        """
+        Generate a video from a text prompt using Hugging Face API.
+        
+        Args:
+            prompt: Text description of the video to generate
+            output_path: Path to save the generated video
+            negative_prompt: Text description of what to avoid in the video
+            num_frames: Number of frames to generate
+            num_inference_steps: Number of denoising steps
+            width: Video width
+            height: Video height
+            fps: Frames per second
+            seed: Random seed for reproducibility
             
         Returns:
             Path to the generated video
         """
-        # Tokenize the script
-        inputs = self.tokenizer(script, return_tensors="pt")
-        if torch.cuda.is_available():
-            inputs = {k: v.to("cuda") for k, v in inputs.items()}
+        try:
+            # Default negative prompt if none provided
+            if negative_prompt is None:
+                negative_prompt = "worst quality, inconsistent motion, blurry, jittery, distorted"
             
-        # Generate video frames
-        with torch.no_grad():
-            video_frames = self.model.generate(**inputs)
+            # Prepare the API request payload
+            payload = {
+                "inputs": prompt,
+                "parameters": {
+                    "negative_prompt": negative_prompt,
+                    "num_frames": num_frames,
+                    "num_inference_steps": num_inference_steps,
+                    "width": width,
+                    "height": height,
+                    "seed": seed
+                }
+            }
             
-        # Convert frames to video
-        video_path = self._frames_to_video(video_frames, output_path)
-        
-        # Add text overlays and effects
-        final_video = self._post_process_video(video_path)
-        
-        return final_video
-        
-    def _frames_to_video(self, frames: torch.Tensor, output_path: str) -> str:
-        """Convert generated frames to a video file."""
-        # Implementation will depend on the specific model output format
-        # This is a placeholder for the actual implementation
-        pass
-        
-    def _post_process_video(self, video_path: str) -> str:
-        """Add text overlays, effects, and optimize for TikTok."""
-        video = VideoFileClip(video_path)
-        
-        # Add text overlays
-        # Add effects
-        # Optimize for TikTok format
-        
-        return video_path
-        
-    def cleanup(self):
-        """Clean up temporary files and resources."""
-        # Implementation for cleanup
-        pass
+            # Make the API request
+            response = requests.post(
+                self.api_url,
+                headers=self.headers,
+                json=payload
+            )
+            
+            if response.status_code != 200:
+                raise Exception(f"API request failed with status {response.status_code}: {response.text}")
+            
+            # Get the video frames from the response
+            video_frames = response.json().get("frames", [])
+            if not video_frames:
+                raise Exception("No frames received from API")
+            
+            # Export video using OpenCV for better quality
+            output_path = Path(output_path)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            self._save_video_with_cv2(video_frames, str(output_path), fps=fps)
+            
+            logger.info(f"Successfully generated video at: {output_path}")
+            return str(output_path)
+            
+        except Exception as e:
+            logger.error(f"Error generating video: {str(e)}")
+            raise
 
-def generate_video(script_path: str, output_path: str) -> str:
+def create_historical_prompt(event: str, style: str = "cinematic") -> Dict[str, str]:
     """
-    Convenience function to generate a video from a script file.
+    Create a detailed prompt for historical video generation.
     
     Args:
-        script_path: Path to the script file
-        output_path: Where to save the generated video
+        event: Historical event to depict
+        style: Visual style of the video
         
     Returns:
-        Path to the generated video
+        Dictionary containing description and prompt
     """
-    with open(script_path, 'r') as f:
-        script = f.read()
-        
-    generator = VideoGenerator()
-    try:
-        video_path = generator.generate_from_script(script, output_path)
-        return video_path
-    finally:
-        generator.cleanup() 
+    prompts = {
+        "constitutional_convention": {
+            "description": "The Constitutional Convention of 1787 in Philadelphia",
+            "prompt": "A grand assembly hall in Philadelphia, 1787. Distinguished delegates in period clothing engage in passionate debate. Sunlight streams through tall windows, illuminating the ornate wooden architecture. Men in powdered wigs and colonial attire stand and gesture emphatically. The atmosphere is charged with the weight of history being made. The scene is captured in a cinematic style with dramatic lighting and careful attention to historical detail."
+        },
+        "bill_of_rights": {
+            "description": "The drafting of the Bill of Rights",
+            "prompt": "An intimate study in the late 18th century. James Madison sits at a wooden desk, quill in hand, surrounded by candlelight. Parchment papers and historical documents are spread before him. The room is filled with the warm glow of candlelight, casting long shadows. The scene is captured in a cinematic style with careful attention to period details and atmospheric lighting."
+        },
+        "first_amendment": {
+            "description": "A peaceful protest demonstrating freedom of speech",
+            "prompt": "A diverse crowd of peaceful protesters in Washington DC. People of all ages and backgrounds hold signs advocating for civil rights. The scene is captured in golden hour sunlight, with the Washington Monument visible in the background. The atmosphere is one of peaceful determination and unity. The camera moves smoothly through the crowd, capturing the emotion and purpose of the demonstration."
+        }
+    }
+    
+    return prompts.get(event, {
+        "description": "Custom historical event",
+        "prompt": f"A cinematic recreation of {event}. The scene is captured with dramatic lighting and careful attention to historical detail, creating an immersive and authentic representation of the period."
+    }) 

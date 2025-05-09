@@ -1,6 +1,11 @@
 # Changelog for A250: American History Shorts
 
 ## [Unreleased] - 2024-03-19
+- **Switch to Hugging Face**: Migrated from AWS SageMaker to Hugging Face for video generation, simplifying infrastructure and reducing costs.
+- **Environment Setup**: Added HUGGINGFACE_API_TOKEN to .env for authentication.
+- **Documentation Update**: Updated project documentation to reflect Hugging Face integration and removed AWS-specific content.
+
+## [Unreleased] - 2024-03-19
 - **Initial Project Setup**: Started the project with the creation of foundational documentation including project plan, changelog, and README. Focus on defining the scope via a Product Requirements Document (PRD).
 - **Current Focus**: Drafting the PRD to outline how to create fun, stitchable, duetable 1-minute videos on Hugging Face.
 - **Outstanding Issues**: None at this stage.
